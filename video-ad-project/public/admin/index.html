@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Hide the default file input */
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-4 text-center">Upload New Video</h1>
+        
+        <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700" for="videoFile">Choose a video file:</label>
+                <div class="mt-1">
+                    <label for="videoFile" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+                        Browse
+                    </label>
+                    <input type="file" id="videoFile" name="video" accept="video/*" required class="hidden">
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit"
+                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Upload
+                </button>
+            </div>
+        </form>
+
+        <div id="message" class="mt-4 text-center text-sm font-medium"></div>
+
+        <h2 class="text-xl font-bold mt-8 mb-2 text-center">Control Full Screen</h2>
+        <div class="text-center">
+            <button id="fullscreenButton" 
+                class="py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Set All TVs to Full Screen
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const messageDiv = document.getElementById('message');
+        const fullscreenButton = document.getElementById('fullscreenButton');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const videoFile = document.getElementById('videoFile').files[0];
+            formData.append('video', videoFile);
+
+            const response = await fetch('/upload-video', {
+                method: 'POST',
+                body: formData
+            });
+
+            const message = await response.text();
+            messageDiv.textContent = message;
+
+            if (response.ok) {
+                messageDiv.style.color = 'green';
+            } else {
+                messageDiv.style.color = 'red';
+            }
+        });
+
+        fullscreenButton.addEventListener('click', async () => {
+            const response = await fetch('/set-fullscreen', {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                alert("All TVs set to full screen mode!");
+            } else {
+                alert("Failed to set TVs to full screen.");
+            }
+        });
+    </script>
+</body>
+</html>

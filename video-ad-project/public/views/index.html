@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full-Screen Video</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column; /* Align items vertically */
+        }
+
+        .fullscreen {
+            position: fixed;
+            top: 50%; /* Center the video vertically */
+            left: 50%; /* Center the video horizontally */
+            transform: translate(-50%, -50%); /* Shift back to center */
+            transition: transform 0.5s ease; /* Smooth transition for rotation */
+            object-fit: cover; /* Ensures the video covers the entire area */
+        }
+
+        /* Button styling */
+        button {
+            position: absolute;
+            bottom: 20px; /* Position button at the bottom */
+            background-color: white;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: gray; /* Change color on hover */
+        }
+    </style>
+</head>
+<body>
+
+    <video id="videoPlayer" class="fullscreen" autoplay loop muted>
+        <source src="/videos/sample.mp4" type="video/mp4">
+    </video>
+    
+    <button id="rotateButton">Rotate & Full-Screen</button>
+
+    <script>
+        let isPortrait = false; // Track the current orientation
+
+        const rotateButton = document.getElementById('rotateButton');
+        const videoPlayer = document.getElementById('videoPlayer');
+
+        // Function to toggle video rotation and go full screen
+        rotateButton.addEventListener('click', async () => {
+            isPortrait = !isPortrait; // Toggle orientation
+            videoPlayer.style.transform = isPortrait ? 'translate(-50%, -50%) rotate(90deg)' : 'translate(-50%, -50%) rotate(0deg)'; // Rotate or reset
+            videoPlayer.style.width = isPortrait ? '100vh' : '100%'; // Adjust width based on orientation
+            videoPlayer.style.height = isPortrait ? '100%' : '100vh'; // Adjust height based on orientation
+
+            // Request full screen
+            if (isPortrait) {
+                try {
+                    await videoPlayer.requestFullscreen();
+                } catch (error) {
+                    console.error("Error trying to enter full screen:", error);
+                }
+            } else {
+                // Exit full screen if coming back to landscape
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            }
+
+            // Hide the button after it is pressed
+            rotateButton.style.display = 'none';
+        });
+
+        async function updateVideo() {
+            try {
+                const response = await fetch('/current-video');
+                const data = await response.json();
+                const newVideoSrc = `/videos/${data.filename}`;
+
+                // Only update if the video is different
+                if (videoPlayer.src !== newVideoSrc) {
+                    videoPlayer.src = newVideoSrc;
+                    videoPlayer.load();
+                    videoPlayer.play();
+                }
+            } catch (error) {
+                console.error("Error updating video:", error);
+            }
+        }
+
+        // Check every 60 seconds (60000 ms)
+        setInterval(updateVideo, 10000); // Adjust the interval as needed
+
+        // Call the function immediately on page load
+        updateVideo();
+    </script>
+</body>
+</html>
